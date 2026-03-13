@@ -48,15 +48,15 @@ format install
 format update
 format remove
 
-format log		<tag>	<message>
-format logln	<tag>	<message>
-format ok		<message>
-format error	<message>
-format warn		<message>
+format log <tag> <message>
+format logln <tag> <message>
+format ok <message>
+format error <message>
+format warn <message>
 
-format title	<title>
-format header	<header>
-format option	<flag str>	<description>
-format example  <tool>	    <flags & args>
+format title <title>
+format header <header>
+format option <flag str> <description>
+format example <tool> <flags & args>
 
 ```
