@@ -35,7 +35,7 @@ title() {
 #   header "Options"
 header() {
     local text="$1"
-    printf "\n%b%s:%b\n" "$BOLD$YELLOW" "$text" "$RESET"
+    printf "\n%b%s:%b\n" "$BOLD$CYAN" "$text" "$RESET"
 }
 
 # Prints an aligned option row
@@ -56,6 +56,6 @@ example() {
     local tool="$1"
     local args="$2"
 
-    printf "  %b%-${HELP_MENU_PAD}s%b %s\n" \
-        "$MAGENTA" "$tool" "$RESET" "$args"
+    printf "  ${MAGENTA}%-10s${RESET}${YELLOW}%s${RESET}\n" \
+        "$tool" "$args"
 }
