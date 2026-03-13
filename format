@@ -71,7 +71,6 @@ _formatter_handle_install() {
 
     # Ensure the bash installer is installed to the system
     which_installer=$(which installer)
-    echo "$which_installer"
     if [[ -z "$which_installer" ]]; then
 	temp_dir=""
 	installer_repo="https://github.com/JMinyard1335/Bash-Installer"
