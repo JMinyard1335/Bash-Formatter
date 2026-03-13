@@ -41,7 +41,7 @@ Usage:
   format <command> [args...]
 
 Commands:
-  install remove update
+  install remove update version
   error warn ok log logln
   title header option example
 EOF
@@ -54,6 +54,7 @@ _format_valid_cmd() {
             _format_usage
             exit 0
             ;;
+	version) logln "format" "0.0.1"; exit 0;;
         install|remove|update|\
         error|warn|ok|log|logln|\
         title|header|option|example)
