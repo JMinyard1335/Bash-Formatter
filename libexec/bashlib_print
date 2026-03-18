@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# A CLI tool for print output.
+#
+# This subcommand supports a flag-driven interface only.
+
+style_tool_name="style"
+style_cli_print_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_tool_lib_dir=""
+
+if [[ "$style_cli_print_dir" == "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ "$style_cli_print_dir" == "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "${style_cli_print_dir}/../lib" ]]; then
+    style_tool_lib_dir="${style_cli_print_dir}/../lib"
+else
+    printf '\e[1;31m[Error]\e[0m: Unable to locate the %s library files.\n' \
+        "${style_tool_name}" >&2
+    exit 1
+fi
+
+source "${style_tool_lib_dir}/internal/bashlib_print.bash"
+source "${style_tool_lib_dir}/internal/bashlib_menu.bash"
+
+style_cli_print_usage() {
+    helpmenu_print_title "style print"
+    helpmenu_print_subtitle "Styled output functions"
+    helpmenu_print_header "Usage"
+    printf "  %s\n" "style print [options] <message...>"
+
+    helpmenu_print_header "Options"
+    helpmenu_print_option "-c, --codes <ansi-codes>" "Apply ANSI escape code(s) to message text"
+    helpmenu_print_option "-t, --tag <tag>" "Prefix message with [tag]:"
+    helpmenu_print_option "-n, --newline" "End output with newline"
+    helpmenu_print_option "-e, --error" "Print predefined error message format"
+    helpmenu_print_option "-w, --warn" "Print predefined warning message format"
+    helpmenu_print_option "-s, --success" "Print predefined success message format"
+    helpmenu_print_option "-l, --log" "Print predefined log message format"
+    helpmenu_print_option "-h, --help" "Show this help message"
+
+    helpmenu_print_header "Examples"
+    helpmenu_print_example "style" "print --error \"something failed\""
+    helpmenu_print_example "style" "print --warn \"disk usage is high\""
+    helpmenu_print_example "style" "print --success \"done\""
+    helpmenu_print_example "style" "print --codes \"\\e[1;34m\" --tag \"Info\" --newline \"starting up\""
+}
+
+style_cli_print_parse_args() {
+    local preset=""
+    local codes=""
+    local tag=""
+    local newline=0
+    local message_parts=()
+    local message=""
+
+    if [[ "$#" -lt 1 ]]; then
+        style_cli_print_usage >&2
+        return 1
+    fi
+
+    case "$1" in
+        -h|--help|help)
+            style_cli_print_usage
+            return 0
+            ;;
+    esac
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -c|--codes)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                codes="$2"
+                shift 2
+                ;;
+            -t|--tag)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                tag="$2"
+                shift 2
+                ;;
+            -n|--newline)
+                newline=1
+                shift
+                ;;
+            -e|--error)
+                preset="error"
+                shift
+                ;;
+            -w|--warn)
+                preset="warn"
+                shift
+                ;;
+            -s|--success)
+                preset="success"
+                shift
+                ;;
+            -l | --log)
+                preset="log"
+                shift
+                ;;
+            -h|--help)
+                style_cli_print_usage
+                return 0
+                ;;
+            --)
+                shift
+                while [[ "$#" -gt 0 ]]; do
+                    message_parts+=("$1")
+                    shift
+                done
+                ;;
+            -*)
+                print_error "Unknown option: $1"
+                style_cli_print_usage >&2
+                return 1
+                ;;
+            *)
+                message_parts+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    message="${message_parts[*]}"
+    if [[ -z "$message" ]]; then
+        print_error "Message is required"
+        style_cli_print_usage >&2
+        return 1
+    fi
+
+    print_with_options "$preset" "$codes" "$tag" "$newline" "$message"
+
+    return "$?"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_cli_print_parse_args "$@"
+    exit "$?"
+fi 

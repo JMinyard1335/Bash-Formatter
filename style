@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# style subcommand dispatcher.
+
+style_tool_name="style"
+style_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_libexec_dir=""
+style_lib_dir=""
+
+if [[ -d "${style_script_dir}/libexec" ]]; then
+    style_libexec_dir="${style_script_dir}/libexec"
+    style_lib_dir="${style_script_dir}/lib"
+elif [[ -d "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="${HOME}/.local/libexec/${style_tool_name}"
+    style_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ -d "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="/usr/local/libexec/${style_tool_name}"
+    style_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "/usr/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="/usr/libexec/${style_tool_name}"
+    style_lib_dir="/usr/lib/${style_tool_name}"
+else
+    printf '\e[1;31m[Error]\e[0m: Unable to locate %s libexec directory.\n' "${style_tool_name}" >&2
+    exit 1
+fi
+
+source "${style_lib_dir}/internal/bashlib_menu.bash"
+
+style_usage() {
+        helpmenu_print_title "style"
+        helpmenu_print_subtitle "A CLI tool for styling different types of output."
+        helpmenu_print_header "Usage"
+        printf "  %s\n" "style <command> [args...]"
+
+        helpmenu_print_header "Commands"
+        helpmenu_print_option "print" "Styled output functions"
+        helpmenu_print_option "menu" "Help menu formatting functions"
+        helpmenu_print_option "help" "Show this message"
+        helpmenu_print_option "version" "Print version"
+
+        helpmenu_print_header "Examples"
+        helpmenu_print_example "style" "print --error \"something failed\""
+        helpmenu_print_example "style" "print --codes \"\\e[1;36m\" --tag \"Info\" --newline \"booting\""
+        helpmenu_print_example "style" "menu --title \"My Tool\""
+        echo ""
+}
+
+style_dispatch() {
+    local command="${1:-help}"
+    local command_bin=""
+
+    case "${command}" in
+        help|-h|--help)
+            style_usage
+            return 0
+            ;;
+        version|-v|--version)
+            printf '%s\n' '0.1.0'
+            return 0
+            ;;
+        print|menu)
+            command_bin="${style_libexec_dir}/bashlib_${command}"
+            ;;
+        *)
+            printf '\e[1;31m[Error]\e[0m: Unknown command: %s\n' "${command}" >&2
+            style_usage >&2
+            return 1
+            ;;
+    esac
+
+    if [[ ! -x "${command_bin}" ]]; then
+        printf '\e[1;31m[Error]\e[0m: Command executable not found: %s\n' "${command_bin}" >&2
+        return 1
+    fi
+
+    shift
+    "${command_bin}" "$@"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_dispatch "$@"
+    exit "$?"
+fi
