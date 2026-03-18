@@ -1,4 +1,4 @@
 [project]
-tool="format"
+tool="style"
 author="Jachin Minyard"
 repo="https://github.com/JMinyard1335/Bash-Formatter"

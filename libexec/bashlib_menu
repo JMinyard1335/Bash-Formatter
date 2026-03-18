@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# A CLI tool for the help menu functions.
+#
+# This cli program will be a subcommand in the style toolset.
+# should be of the form
+#   menu title <text>
+#   menu header <text>
+#   menu option <flags> <description>
+#   menu example <tool> <args>
+
+style_tool_name="style"
+style_cli_menu_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_tool_lib_dir=""
+
+if [[ "$style_cli_menu_dir" == "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ "$style_cli_menu_dir" == "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "${style_cli_menu_dir}/../lib" ]]; then
+    style_tool_lib_dir="${style_cli_menu_dir}/../lib"
+else
+    printf '\e[1;31m[Error]\e[0m: Unable to locate the %s library files.\n' \
+        "${style_tool_name}" >&2
+    exit 1
+fi
+
+source "${style_tool_lib_dir}/internal/bashlib_menu.bash"
+source "${style_tool_lib_dir}/internal/bashlib_print.bash"
+
+style_cli_menu_usage() {
+    cat <<EOF
+Usage:
+  menu <function> [args...]
+
+Functions:
+  title    <text>
+  header   <text>
+  option   <flags> <description>
+  example  <tool> <args>
+
+Examples:
+  menu title "Formatter Help"
+  menu header "Options"
+  menu option "-h, --help" "Show this help message"
+  menu example "formatter" "format file.txt"
+EOF
+}
+
+style_cli_menu_parse_args() {
+    local func=""
+
+    if [[ "$#" -lt 1 ]]; then
+        style_cli_menu_usage >&2
+        return 1
+    fi
+
+    case "$1" in
+        -h|--help|help)
+            style_cli_menu_usage
+            return 0
+            ;;
+    esac
+
+    func="$1"
+    shift
+
+    case "$func" in
+        title)
+            helpmenu_print_title "$@"
+            ;;
+        header)
+            helpmenu_print_header "$@"
+            ;;
+        option)
+            helpmenu_print_option "$@"
+            ;;
+        example)
+            helpmenu_print_example "$@"
+            ;;
+        *)
+            print_error "Unknown menu function: ${func}"
+            style_cli_menu_usage >&2
+            return 1
+            ;;
+    esac
+
+    return "$?"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_cli_menu_parse_args "$@"
+    exit "$?"
+fi

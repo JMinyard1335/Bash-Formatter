@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# A CLI tool for the print functions.
+#
+# This cli program will be a subcommand in the style toolset.
+# should be of the form
+#   print print <codes> <message>
+#   print println <codes> <message>
+#   print print_tag <codes> <tag> <message>
+#   print println_tag <codes> <tag> <message>
+
+style_tool_name="style"
+style_cli_print_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_tool_lib_dir=""
+
+if [[ "$style_cli_print_dir" == "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ "$style_cli_print_dir" == "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "${style_cli_print_dir}/../lib" ]]; then
+    style_tool_lib_dir="${style_cli_print_dir}/../lib"
+else
+    printf '\e[1;31m[Error]\e[0m: Unable to locate the %s library files.\n' \
+        "${style_tool_name}" >&2
+    exit 1
+fi
+
+source "${style_tool_lib_dir}/internal/bashlib_print.bash"
+
+style_cli_print_usage() {
+    cat <<EOF
+Usage:
+  print <function> [args...]
+
+Functions:
+  print         <message>
+  print         <codes> <message>
+  println       <message>
+  println       <codes> <message>
+  print_tag     <tag> <message>
+  print_tag     <codes> <tag> <message>
+  println_tag   <tag> <message>
+  println_tag   <codes> <tag> <message>
+  print_error   <message...>
+  print_warn    <message...>
+  print_success <message...>
+
+Examples:
+  print println "hello world"
+  print println "\e[32m" "green text"
+  print print_tag "Info" "starting up"
+  print println_tag "\e[1;34m" "Note" "styled tagged line"
+  print print_error "something failed"
+EOF
+}
+
+style_cli_print_parse_args() {
+    local func=""
+
+    if [[ "$#" -lt 1 ]]; then
+        style_cli_print_usage >&2
+        return 1
+    fi
+
+    case "$1" in
+        -h|--help|help)
+            style_cli_print_usage
+            return 0
+            ;;
+    esac
+
+    func="$1"
+    shift
+
+    case "$func" in
+        print)
+            print "$@"
+            ;;
+        println)
+            println "$@"
+            ;;
+        print_tag)
+            print_tag "$@"
+            ;;
+        println_tag)
+            println_tag "$@"
+            ;;
+        print_error)
+            print_error "$*"
+            ;;
+        print_warn)
+            print_warn "$*"
+            ;;
+        print_success)
+            print_success "$*"
+            ;;
+        *)
+            print_error "Unknown print function: ${func}"
+            style_cli_print_usage >&2
+            return 1
+            ;;
+    esac
+
+    return "$?"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_cli_print_parse_args "$@"
+    exit "$?"
+fi
