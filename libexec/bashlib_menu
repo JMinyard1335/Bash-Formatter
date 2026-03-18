@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
 # A CLI tool for the help menu functions.
 #
-# This cli program will be a subcommand in the style toolset.
-# should be of the form
-#   menu title <text>
-#   menu header <text>
-#   menu option <flags> <description>
-#   menu example <tool> <args>
+# This subcommand exposes a flag-based interface.
 
 style_tool_name="style"
 style_cli_menu_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,26 +23,38 @@ source "${style_tool_lib_dir}/internal/bashlib_menu.bash"
 source "${style_tool_lib_dir}/internal/bashlib_print.bash"
 
 style_cli_menu_usage() {
-    cat <<EOF
-Usage:
-  menu <function> [args...]
+    helpmenu_print_title "style menu"
+    helpmenu_print_subtitle "Help menu formatting functions"
+    helpmenu_print_header "Usage"
+    printf "  %s\n" "style menu [options]"
 
-Functions:
-  title    <text>
-  header   <text>
-  option   <flags> <description>
-  example  <tool> <args>
+    helpmenu_print_header "Options"
+    helpmenu_print_option "-t, --title <text>" "Print a centered title"
+    helpmenu_print_option "-s, --subtitle <text>" "Print a centered subtitle (no color)"
+    helpmenu_print_option "-H, --header <text>" "Print a section header"
+    helpmenu_print_option "-o, --option <flags>" "Print an option row (requires --desc)"
+    helpmenu_print_option "-d, --desc <text>" "Description used with --option"
+    helpmenu_print_option "-e, --example <tool>" "Print an example row (requires --args)"
+    helpmenu_print_option "-a, --args <text>" "Args text used with --example"
+    helpmenu_print_option "-h, --help" "Show this help message"
 
-Examples:
-  menu title "Formatter Help"
-  menu header "Options"
-  menu option "-h, --help" "Show this help message"
-  menu example "formatter" "format file.txt"
-EOF
+    helpmenu_print_header "Examples"
+    helpmenu_print_example "style" "menu --title \"Formatter Help\""
+    helpmenu_print_example "style" "menu --subtitle \"Fast bash styling\""
+    helpmenu_print_example "style" "menu -H \"Options\""
+    helpmenu_print_example "style" "menu --option \"-h, --help\" --desc \"Show this help message\""
+    helpmenu_print_example "style" "menu --example \"formatter\" --args \"style print --help\""
 }
 
 style_cli_menu_parse_args() {
-    local func=""
+        local action=""
+        local title_text=""
+        local subtitle_text=""
+        local header_text=""
+        local option_flags=""
+        local option_desc=""
+        local example_tool=""
+        local example_args=""
 
     if [[ "$#" -lt 1 ]]; then
         style_cli_menu_usage >&2
@@ -61,24 +68,135 @@ style_cli_menu_parse_args() {
             ;;
     esac
 
-    func="$1"
-    shift
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -t|--title)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                if [[ -n "$action" ]]; then
+                    print_error "Use one menu action per command"
+                    return 1
+                fi
+                action="title"
+                title_text="$2"
+                shift 2
+                ;;
+            -s|--subtitle)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                if [[ -n "$action" ]]; then
+                    print_error "Use one menu action per command"
+                    return 1
+                fi
+                action="subtitle"
+                subtitle_text="$2"
+                shift 2
+                ;;
+            -H|--header)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                if [[ -n "$action" ]]; then
+                    print_error "Use one menu action per command"
+                    return 1
+                fi
+                action="header"
+                header_text="$2"
+                shift 2
+                ;;
+            -o|--option)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                if [[ -n "$action" ]]; then
+                    print_error "Use one menu action per command"
+                    return 1
+                fi
+                action="option"
+                option_flags="$2"
+                shift 2
+                ;;
+            -d|--desc)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                option_desc="$2"
+                shift 2
+                ;;
+            -e|--example)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                if [[ -n "$action" ]]; then
+                    print_error "Use one menu action per command"
+                    return 1
+                fi
+                action="example"
+                example_tool="$2"
+                shift 2
+                ;;
+            -a|--args)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                example_args="$2"
+                shift 2
+                ;;
+            -h|--help)
+                style_cli_menu_usage
+                return 0
+                ;;
+            --)
+                shift
+                ;;
+            -*)
+                print_error "Unknown option: $1"
+                style_cli_menu_usage >&2
+                return 1
+                ;;
+            *)
+                print_error "Unexpected argument: $1"
+                style_cli_menu_usage >&2
+                return 1
+                ;;
+        esac
+    done
 
-    case "$func" in
+    case "$action" in
         title)
-            helpmenu_print_title "$@"
+            helpmenu_print_title "$title_text"
+            ;;
+        subtitle)
+            helpmenu_print_subtitle "$subtitle_text"
             ;;
         header)
-            helpmenu_print_header "$@"
+            helpmenu_print_header "$header_text"
             ;;
         option)
-            helpmenu_print_option "$@"
+            if [[ -z "$option_desc" ]]; then
+                print_error "--option requires --desc"
+                return 1
+            fi
+            helpmenu_print_option "$option_flags" "$option_desc"
             ;;
         example)
-            helpmenu_print_example "$@"
+            if [[ -z "$example_args" ]]; then
+                print_error "--example requires --args"
+                return 1
+            fi
+            helpmenu_print_example "$example_tool" "$example_args"
             ;;
         *)
-            print_error "Unknown menu function: ${func}"
+            print_error "No menu action provided"
             style_cli_menu_usage >&2
             return 1
             ;;

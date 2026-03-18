@@ -1,135 +1,82 @@
 #!/usr/bin/env bash
-#
-# used to format output.
-# Standard output functions
-#	format error <message>
-#	format warn <message>
-#	format ok <message>
-#	format log <tag> <message>
-#	format logln <tag> <message>
-#
-# Help menu formatting
-#	format title <text>
-#	format header <text>
-#	format option [opts] <flags> <description>
-#	format example <tool> <opts> <args>
+# style subcommand dispatcher.
 
+style_tool_name="style"
+style_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_libexec_dir=""
+style_lib_dir=""
 
-## Source the required paths.
-SCRIPT_PATH="$(realpath -- "$0")"
-SCRIPT_DIR="$(dirname -- "$SCRIPT_PATH")"
-SCRIPT_NAME="$(basename -- "$0")"
-
-if [[ -d "$SCRIPT_DIR/lib" ]]; then
-    LIB_DIR="$SCRIPT_DIR/lib"
-elif [[ -d "$HOME/.local/lib/$SCRIPT_NAME" ]]; then
-    LIB_DIR="$HOME/.local/lib/$SCRIPT_NAME"
-elif [[ -d "/usr/lib/$SCRIPT_NAME" ]]; then
-    LIB_DIR="/usr/lib/$SCRIPT_NAME"
+if [[ -d "${style_script_dir}/libexec" ]]; then
+    style_libexec_dir="${style_script_dir}/libexec"
+    style_lib_dir="${style_script_dir}/lib"
+elif [[ -d "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="${HOME}/.local/libexec/${style_tool_name}"
+    style_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ -d "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="/usr/local/libexec/${style_tool_name}"
+    style_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "/usr/libexec/${style_tool_name}" ]]; then
+    style_libexec_dir="/usr/libexec/${style_tool_name}"
+    style_lib_dir="/usr/lib/${style_tool_name}"
 else
-    printf '[Error]: Could not locate library directory for %s\n' "$SCRIPT_NAME" >&2
+    printf '\e[1;31m[Error]\e[0m: Unable to locate %s libexec directory.\n' "${style_tool_name}" >&2
     exit 1
 fi
 
-source "$LIB_DIR/help_menu.sh"
-source "$LIB_DIR/format_output.sh"
-## -------------------------
+source "${style_lib_dir}/internal/bashlib_menu.bash"
 
-_format_usage() {
-    cat <<EOF
-Usage:
-  format <command> [args...]
+style_usage() {
+        helpmenu_print_title "style"
+        helpmenu_print_subtitle "A CLI tool for styling different types of output."
+        helpmenu_print_header "Usage"
+        printf "  %s\n" "style <command> [args...]"
 
-Commands:
-  install remove update version
-  error warn ok log logln
-  title header option example
-EOF
+        helpmenu_print_header "Commands"
+        helpmenu_print_option "print" "Styled output functions"
+        helpmenu_print_option "menu" "Help menu formatting functions"
+        helpmenu_print_option "help" "Show this message"
+        helpmenu_print_option "version" "Print version"
+
+        helpmenu_print_header "Examples"
+        helpmenu_print_example "style" "print --error \"something failed\""
+        helpmenu_print_example "style" "print --codes \"\\e[1;36m\" --tag \"Info\" --newline \"booting\""
+        helpmenu_print_example "style" "menu --title \"My Tool\""
+        echo ""
 }
 
-# Makes sure the first arg given is a valid cmd
-_format_valid_cmd() {
-    case "$1" in
-        help|'')
-            _format_usage
-            exit 0
-            ;;
-	version) logln "format" "0.0.1"; exit 0;;
-        install|remove|update|\
-        error|warn|ok|log|logln|\
-        title|header|option|example)
+style_dispatch() {
+    local command="${1:-help}"
+    local command_bin=""
+
+    case "${command}" in
+        help|-h|--help)
+            style_usage
             return 0
             ;;
+        version|-v|--version)
+            printf '%s\n' '0.1.0'
+            return 0
+            ;;
+        print|menu)
+            command_bin="${style_libexec_dir}/bashlib_${command}"
+            ;;
         *)
+            printf '\e[1;31m[Error]\e[0m: Unknown command: %s\n' "${command}" >&2
+            style_usage >&2
             return 1
             ;;
     esac
-}
 
-# _formatter_handle_install <cmd>
-_formatter_handle_install() {
-
-    # Ensure the bash installer is installed to the system
-    which_installer=$(which installer)
-    if [[ -z "$which_installer" ]]; then
-	temp_dir=""
-	installer_repo="https://github.com/JMinyard1335/Bash-Installer"
-	logln "Installer not found on system installing now."
-
-	# create a temp dir
-	temp_dir="$(mktemp -d)" || {
-            error "Failed to create temporary directory"
-            exit 1
-        }
-
-	# attempt to clone
-	git clone "$installer_repo" "$temp_dir" || {
-            error "Failed to clone installer repository"
-            rm -rf -- "$temp_dir"
-            exit 1
-        }
-	
-	"$temp_dir/installer" install "$temp_dir" || {
-            error "Failed to install installer"
-            rm -rf -- "$temp_dir"
-            exit 1
-        }
-
-	rm -rf -- "$temp_dir"
-
-	which_installer="$(command -v installer)"
-        [[ -z "$which_installer" ]] && {
-            error "Installer still not found after installation"
-            exit 1
-        }
+    if [[ ! -x "${command_bin}" ]]; then
+        printf '\e[1;31m[Error]\e[0m: Command executable not found: %s\n' "${command_bin}" >&2
+        return 1
     fi
 
-    case "$cmd" in
-	install) installer install "$SCRIPT_DIR";;
-	update) installer update "$SCRIPT_NAME";;
-	remove) installer remove "$SCRIPT_NAME";;
-    esac
+    shift
+    "${command_bin}" "$@"
 }
 
-# Dispatch to the matching sourced function.
-_formatter_parse_args() {
-    local cmd="${1:-}"
-
-    # make sure command is valid
-    if ! _format_valid_cmd "$cmd"; then
-        error "Invalid command was given"
-        _format_usage
-        exit 1
-    fi
-    shift	# we have the command shift the argument line.
-
-    # if the user wants to run the installer make sure it is on the system first.
-    if [[ "$cmd" == "install" || "$cmd" == "update" || "$cmd" == "remove" ]]; then
-	_formatter_handle_install "$cmd"
-    else
-	"$cmd" "$@"
-    fi
-
-}
-
-_formatter_parse_args "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_dispatch "$@"
+    exit "$?"
+fi

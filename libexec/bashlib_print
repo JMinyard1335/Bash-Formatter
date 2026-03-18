@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
-# A CLI tool for the print functions.
+# A CLI tool for print output.
 #
-# This cli program will be a subcommand in the style toolset.
-# should be of the form
-#   print print <codes> <message>
-#   print println <codes> <message>
-#   print print_tag <codes> <tag> <message>
-#   print println_tag <codes> <tag> <message>
+# This subcommand supports a flag-driven interface only.
 
 style_tool_name="style"
 style_cli_print_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,36 +20,38 @@ else
 fi
 
 source "${style_tool_lib_dir}/internal/bashlib_print.bash"
+source "${style_tool_lib_dir}/internal/bashlib_menu.bash"
 
 style_cli_print_usage() {
-    cat <<EOF
-Usage:
-  print <function> [args...]
+    helpmenu_print_title "style print"
+    helpmenu_print_subtitle "Styled output functions"
+    helpmenu_print_header "Usage"
+    printf "  %s\n" "style print [options] <message...>"
 
-Functions:
-  print         <message>
-  print         <codes> <message>
-  println       <message>
-  println       <codes> <message>
-  print_tag     <tag> <message>
-  print_tag     <codes> <tag> <message>
-  println_tag   <tag> <message>
-  println_tag   <codes> <tag> <message>
-  print_error   <message...>
-  print_warn    <message...>
-  print_success <message...>
+    helpmenu_print_header "Options"
+    helpmenu_print_option "-c, --codes <ansi-codes>" "Apply ANSI escape code(s) to message text"
+    helpmenu_print_option "-t, --tag <tag>" "Prefix message with [tag]:"
+    helpmenu_print_option "-n, --newline" "End output with newline"
+    helpmenu_print_option "-e, --error" "Print predefined error message format"
+    helpmenu_print_option "-w, --warn" "Print predefined warning message format"
+    helpmenu_print_option "-s, --success" "Print predefined success message format"
+    helpmenu_print_option "-l, --log" "Print predefined log message format"
+    helpmenu_print_option "-h, --help" "Show this help message"
 
-Examples:
-  print println "hello world"
-  print println "\e[32m" "green text"
-  print print_tag "Info" "starting up"
-  print println_tag "\e[1;34m" "Note" "styled tagged line"
-  print print_error "something failed"
-EOF
+    helpmenu_print_header "Examples"
+    helpmenu_print_example "style" "print --error \"something failed\""
+    helpmenu_print_example "style" "print --warn \"disk usage is high\""
+    helpmenu_print_example "style" "print --success \"done\""
+    helpmenu_print_example "style" "print --codes \"\\e[1;34m\" --tag \"Info\" --newline \"starting up\""
 }
 
 style_cli_print_parse_args() {
-    local func=""
+    local preset=""
+    local codes=""
+    local tag=""
+    local newline=0
+    local message_parts=()
+    local message=""
 
     if [[ "$#" -lt 1 ]]; then
         style_cli_print_usage >&2
@@ -68,37 +65,75 @@ style_cli_print_parse_args() {
             ;;
     esac
 
-    func="$1"
-    shift
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -c|--codes)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                codes="$2"
+                shift 2
+                ;;
+            -t|--tag)
+                if [[ "$#" -lt 2 ]]; then
+                    print_error "Missing value for $1"
+                    return 1
+                fi
+                tag="$2"
+                shift 2
+                ;;
+            -n|--newline)
+                newline=1
+                shift
+                ;;
+            -e|--error)
+                preset="error"
+                shift
+                ;;
+            -w|--warn)
+                preset="warn"
+                shift
+                ;;
+            -s|--success)
+                preset="success"
+                shift
+                ;;
+            -l | --log)
+                preset="log"
+                shift
+                ;;
+            -h|--help)
+                style_cli_print_usage
+                return 0
+                ;;
+            --)
+                shift
+                while [[ "$#" -gt 0 ]]; do
+                    message_parts+=("$1")
+                    shift
+                done
+                ;;
+            -*)
+                print_error "Unknown option: $1"
+                style_cli_print_usage >&2
+                return 1
+                ;;
+            *)
+                message_parts+=("$1")
+                shift
+                ;;
+        esac
+    done
 
-    case "$func" in
-        print)
-            print "$@"
-            ;;
-        println)
-            println "$@"
-            ;;
-        print_tag)
-            print_tag "$@"
-            ;;
-        println_tag)
-            println_tag "$@"
-            ;;
-        print_error)
-            print_error "$*"
-            ;;
-        print_warn)
-            print_warn "$*"
-            ;;
-        print_success)
-            print_success "$*"
-            ;;
-        *)
-            print_error "Unknown print function: ${func}"
-            style_cli_print_usage >&2
-            return 1
-            ;;
-    esac
+    message="${message_parts[*]}"
+    if [[ -z "$message" ]]; then
+        print_error "Message is required"
+        style_cli_print_usage >&2
+        return 1
+    fi
+
+    print_with_options "$preset" "$codes" "$tag" "$newline" "$message"
 
     return "$?"
 }
@@ -106,4 +141,4 @@ style_cli_print_parse_args() {
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     style_cli_print_parse_args "$@"
     exit "$?"
-fi
+fi 

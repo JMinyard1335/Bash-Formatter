@@ -66,7 +66,7 @@ println(){
     local message="" codes=""
     
     if [ "$#" -eq  1 ]; then
-	message="$1"e
+    message="$1"
     elif [ "$#" -eq 2 ]; then
 	message="$2"
 	codes="$1"
@@ -121,4 +121,73 @@ print_warn() {
 print_success() {
     printf "${style_bold}${style_green}[Success]:${style_reset} %s\n" "$*"
     return 0
+}
+
+# print_log <message>
+# prints a log message to stdout
+print_log() {
+    printf "${style_cyan}[Log]:${style_reset} %s\n" "$*"
+    return 0
+}
+
+# print_with_options <preset> <codes> <tag> <newline> <message>
+# Routes parsed CLI options to the matching print primitive.
+print_with_options() {
+    local preset="$1"
+    local codes="$2"
+    local tag="$3"
+    local newline="$4"
+    local message="$5"
+
+    case "$preset" in
+        error)
+            print_error "$message"
+            return "$?"
+            ;;
+        warn)
+            print_warn "$message"
+            return "$?"
+            ;;
+        success)
+            print_success "$message"
+            return "$?"
+            ;;
+        log)
+            print_log "$message"
+            return "$?"
+            ;;
+    esac
+
+    if [[ -n "$tag" ]]; then
+        if [[ "$newline" -eq 1 ]]; then
+            if [[ -n "$codes" ]]; then
+                println_tag "$codes" "$tag" "$message"
+            else
+                println_tag "$tag" "$message"
+            fi
+        else
+            if [[ -n "$codes" ]]; then
+                print_tag "$codes" "$tag" "$message"
+            else
+                print_tag "$tag" "$message"
+            fi
+        fi
+        return "$?"
+    fi
+
+    if [[ "$newline" -eq 1 ]]; then
+        if [[ -n "$codes" ]]; then
+            println "$codes" "$message"
+        else
+            println "$message"
+        fi
+    else
+        if [[ -n "$codes" ]]; then
+            print "$codes" "$message"
+        else
+            print "$message"
+        fi
+    fi
+
+    return "$?"
 }

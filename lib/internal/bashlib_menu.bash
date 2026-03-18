@@ -33,8 +33,23 @@ helpmenu_print_title() {
     pad=$(( (style_helpmenu_width - text_len) / 2 ))
     (( pad < 0 )) && pad=0
 
-    printf "%*s%b%s%b\n" \
+    printf "\n%*s%b%s%b\n" \
         "$pad" "" "${style_bold}${style_cyan}" "$text" "${style_reset}"
+}
+
+# helpmenu_print_subtitle <text>
+# Prints a centered subtitle without color styling.
+# Example:
+#   helpmenu_print_subtitle "Formatter by J. Minyard"
+helpmenu_print_subtitle() {
+    local text="$1"
+    local text_len="" pad=""
+
+    text_len=${#text}
+    pad=$(( (style_helpmenu_width - text_len) / 2 ))
+    (( pad < 0 )) && pad=0
+
+    printf "%*s%s\n" "$pad" "" "$text"
 }
 
 # helpmenu_print_header <text>
