@@ -1,145 +1,73 @@
 # bashlib-style
 
-`bashlib-style` is a Bash styling toolkit with a single entrypoint command: `style`.
+`bashlib-style` is a Bash styling toolkit built around one command (`style`) and one source file (`lib/bashlib_style.bash`).
 
-It provides:
+Use it in two ways:
+- CLI playground for testing output in your terminal.
+- Library API for scripts that need consistent styled output and help menus.
 
-- `style print` for styled log and status output
-- `style menu` for formatted help menu lines
-- `style list` for listing ANSI escape code groups
+## What You Get
+
+- `style print`: styled status/log output.
+- `style menu`: consistent help/menu formatting lines.
+- `style list`: ANSI reference lists (`colors`, `format`, `cursor`, `screen`).
+- `lib/bashlib_style.bash`: source this file to use print/menu functions in your own scripts.
 
 ## Quick Start
 
 ```bash
 git clone "https://github.com/JMinyard1335/bashlib-style.git"
 cd bashlib-style
-chmod +x style 
-./style --help
-```
-
-Run the demo script:
-
-```bash
+chmod +x ./style
+./style help
 ./test/example.sh
 ```
 
-### Install to system.
+## Installation
 
-Use my [installer](https://github.com/JMinyard1335/bashlib-installer) to eaisly install and manage this tool. This is an easy way to install all of my bash tools and saves me the trouble of having to write or copy the same install script into every project.
+This repo keeps install details in a separate file.
 
-Once the installer is installed simply run
+- See `INSTALL.md` for local, user, and system-wide install options.
+- If you use `bashlib-installer`, follow the dedicated section in `INSTALL.md`.
 
-```bash
-installer install <path to style project>
-```
-
-and you are good to go!!
-If you want a global install please see the installer help menu with 
-
-```bash
-installer help
-```
-
-## Command Overview
+## Basic Usage
 
 ```bash
 style <command> [args...]
 ```
 
 Commands:
-
-- `print`: styled output
-- `menu`: help/menu formatting output
-- `list`: list ANSI escape code groups
-- `help`: usage text
-- `version`: print tool version
-
-## `style print`
-
-```bash
-style print [options] <message...>
-```
-
-Options:
-
-- `-c, --codes <ansi-codes>`: apply ANSI escape code(s)
-- `-t, --tag <tag>`: prefix with `[tag]:`
-- `-n, --newline`: force newline output
-- `-e, --error`: predefined error output (stderr, exit code 1)
-- `-w, --warn`: predefined warning output (stderr)
-- `-s, --success`: predefined success output
-- `-l, --log`: predefined log output
-- `-h, --help`: print usage
+- `print`
+- `menu`
+- `list`
+- `help`
+- `version`
 
 Examples:
 
 ```bash
-style print --error "could not open config"
-style print --warn "disk usage is high"
 style print --success "build complete"
-style print --log "watcher started"
-style print --codes "\e[1;36m" --tag "Info" --newline "starting service"
-```
-
-## `style menu`
-
-```bash
-style menu [options]
-```
-
-Options:
-
-- `-t, --title <text>`: print title line
-- `-s, --subtitle <text>`: print centered subtitle line (no color)
-- `-H, --header <text>`: print header line
-- `-o, --option <flags>`: option flags text (requires `--desc`)
-- `-d, --desc <text>`: option description
-- `-e, --example <tool>`: example tool name (requires `--args`)
-- `-a, --args <text>`: example args text
-- `-h, --help`: print usage
-
-Examples:
-
-```bash
+style print --warn "disk usage is high"
 style menu --title "My Tool"
-style menu --subtitle "Fast shell styling"
-style menu -H "Options"
-style menu --option "-h, --help" --desc "Show help"
-style menu --example "my-tool" --args "style print --success done"
-```
-
-## `style list`
-
-Probably the most use full part of the CLI. Ever forget what a certian ANSI
-escape sequence is? well now just check with the `list` command. This does not have a backing lib and is only a CLI feature. These are all sourced in 
-from the library file anyways.
-
-```bash
-style list <type> [options]
-```
-
-Types:
-
-- `colors`: standard ANSI colors
-- `format`: text format codes
-- `cursor`: cursor control codes
-- `screen`: screen/line clear codes
-
-Options:
-
-- `-b, --bright`: show bright color list (colors only)
-- `-h, --help`: print usage
-
-Examples:
-
-```bash
-style list colors
 style list colors --bright
-style list format
-style list cursor
-style list screen
 ```
 
-## Demo Script
+## Use As A Library
 
-The current demo is in `test/example.sh` and uses the same flag-based APIs listed above.
+```bash
+#!/usr/bin/env bash
+source "/path/to/bashlib-style/lib/bashlib_style.bash"
+
+print_success "ready"
+helpmenu_print_title "my-tool"
+```
+
+The `style` command is useful for testing and discovery, while sourcing the library is the best path for production scripts.
+
+## Contributing
+
+Guidelines for fixes, features, and pull requests are in `CONTRIBUTING.md`.
+
+## License
+
+This project is licensed under the terms in `LICENSE`.

@@ -17,10 +17,14 @@ style_bin="${repo_root}/style"
 "${style_bin}" menu --option "-v | --version" --desc "prints the version"
 "${style_bin}" menu --header "examples"
 "${style_bin}" menu --example "hello" --args "-h '\$USER'"
-
+echo ""
 "${style_bin}" list colors
+echo ""
 "${style_bin}" list colors --bright
+echo ""
 "${style_bin}" list format
+echo ""
 "${style_bin}" list cursor
+echo ""
 "${style_bin}" list screen
 
