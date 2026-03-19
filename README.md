@@ -6,6 +6,16 @@ Use it in two ways:
 - CLI playground for testing output in your terminal.
 - Library API for scripts that need consistent styled output and help menus.
 
+## Table of Contents
+
+- [What You Get](#what-you-get)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Use As A Library](#use-as-a-library)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## What You Get
 
 - `style print`: styled status/log output.
@@ -27,8 +37,8 @@ chmod +x ./style
 
 This repo keeps install details in a separate file.
 
-- See `INSTALL.md` for local, user, and system-wide install options.
-- If you use `bashlib-installer`, follow the dedicated section in `INSTALL.md`.
+- See [INSTALL.md](INSTALL.md) for local, user, and system-wide install options.
+- If you use `bashlib-installer`, follow the dedicated section in [INSTALL.md](INSTALL.md).
 
 ## Basic Usage
 

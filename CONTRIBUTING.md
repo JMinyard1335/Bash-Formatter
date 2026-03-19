@@ -64,3 +64,31 @@ Use short, imperative commit messages, for example:
 - `fix print option parsing`
 - `add install guide`
 - `improve menu help output`
+
+## AI-Assisted Contributions
+
+AI tools are welcome for drafting code, docs, tests, and refactors.  
+Contributors remain fully responsible for all submitted changes.
+
+### Requirements
+
+- Verify behavior manually before opening a PR.
+- Run the project checklist:
+  - `./style help`
+  - `./style version`
+  - `./style print --success "ok"`
+  - `./style menu --title "test"`
+  - `./style list colors`
+  - `./test/example.sh`
+- Ensure generated code matches project conventions (`style_*`, `print_*`, `helpmenu_*`).
+- Do not include secrets, tokens, private keys, or private/internal code in prompts.
+- Do not copy copyrighted or proprietary code verbatim from external sources.
+- Keep PRs understandable: explain what changed and why, not just “AI generated this.”
+- Update `README.md` and `INSTALL.md` when behavior or setup changes.
+- If AI was used significantly, briefly disclose it in the PR description (for example: “AI-assisted drafting, manually reviewed and tested”).
+
+### Not Acceptable
+
+- Submitting unreviewed AI output.
+- Large AI-generated changes without tests or explanation.
+- Output that adds unnecessary complexity or breaks existing UX/help text.
