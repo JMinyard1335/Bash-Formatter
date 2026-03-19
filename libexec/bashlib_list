@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+# A CLI tool for listing ANSI escape code groups.
+
+style_tool_name="style"
+style_cli_list_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+style_tool_lib_dir=""
+
+if [[ "$style_cli_list_dir" == "${HOME}/.local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="${HOME}/.local/lib/${style_tool_name}"
+elif [[ "$style_cli_list_dir" == "/usr/local/libexec/${style_tool_name}" ]]; then
+    style_tool_lib_dir="/usr/local/lib/${style_tool_name}"
+elif [[ -d "${style_cli_list_dir}/../lib" ]]; then
+    style_tool_lib_dir="${style_cli_list_dir}/../lib"
+else
+    printf '\e[1;31m[Error]\e[0m: Unable to locate the %s library files.\n' \
+        "${style_tool_name}" >&2
+    exit 1
+fi
+
+source "${style_tool_lib_dir}/internal/bashlib_menu.bash"
+source "${style_tool_lib_dir}/internal/bashlib_print.bash"
+
+declare -A style_list_color_codes=(
+    [reset]='\e[0m'
+    [black]='\e[30m'
+    [red]='\e[31m'
+    [green]='\e[32m'
+    [yellow]='\e[33m'
+    [blue]='\e[34m'
+    [magenta]='\e[35m'
+    [cyan]='\e[36m'
+    [white]='\e[37m'
+)
+style_list_color_order=(
+    reset black red green yellow blue magenta cyan white
+)
+
+declare -A style_list_bright_color_codes=(
+    [reset]='\e[0m'
+    [black]='\e[90m'
+    [red]='\e[91m'
+    [green]='\e[92m'
+    [yellow]='\e[93m'
+    [blue]='\e[94m'
+    [magenta]='\e[95m'
+    [cyan]='\e[96m'
+    [white]='\e[97m'
+)
+style_list_bright_color_order=(
+    reset black red green yellow blue magenta cyan white
+)
+
+declare -A style_list_format_codes=(
+    [bold]='\e[1m'
+    [dim]='\e[2m'
+    [italic]='\e[3m'
+    [underline]='\e[4m'
+    [blink]='\e[5m'
+    [reverse]='\e[7m'
+    [strikethrough]='\e[9m'
+)
+style_list_format_order=(
+    bold dim italic underline blink reverse strikethrough
+)
+
+declare -A style_list_cursor_codes=(
+    [hide]='\e[?25l'
+    [show]='\e[?25h'
+    [save]='\e[s'
+    [restore]='\e[u'
+    [home]='\e[H'
+    [up]='\e[A'
+    [down]='\e[B'
+    [left]='\e[D'
+    [right]='\e[C'
+    [next_line]='\e[E'
+    [prev_line]='\e[F'
+    [col1]='\e[G'
+)
+style_list_cursor_order=(
+    hide show save restore home up down left right next_line prev_line col1
+)
+
+declare -A style_list_screen_codes=(
+    [clear_all]='\e[2J'
+    [clear_down]='\e[0J'
+    [clear_up]='\e[1J'
+    [clear_line]='\e[2K'
+    [clear_line_right]='\e[0K'
+    [clear_line_left]='\e[1K'
+)
+style_list_screen_order=(
+    clear_all clear_down clear_up clear_line clear_line_right clear_line_left
+)
+
+style_cli_list_usage() {
+    helpmenu_print_title "style list"
+    helpmenu_print_subtitle "List ANSI escape code groups"
+    helpmenu_print_header "Usage"
+    printf "  %s\n" "style list <type> [options]"
+
+    helpmenu_print_header "Types"
+    helpmenu_print_option "colors" "List standard ANSI colors"
+    helpmenu_print_option "format" "List text formatting codes"
+    helpmenu_print_option "cursor" "List cursor control codes"
+    helpmenu_print_option "screen" "List screen/line clear codes"
+
+    helpmenu_print_header "Options"
+    helpmenu_print_option "-b, --bright" "Use bright color list (colors only)"
+    helpmenu_print_option "-h, --help" "Show this help message"
+
+    helpmenu_print_header "Examples"
+    helpmenu_print_example "style" "list colors"
+    helpmenu_print_example "style" "list colors --bright"
+    helpmenu_print_example "style" "list format"
+    helpmenu_print_example "style" "list cursor"
+    helpmenu_print_example "style" "list screen"
+}
+
+style_cli_list_print_codes() {
+    local list_type="$1"
+    local key=""
+
+    printf "%-18s %s\n" "name" "code"
+    printf "%-18s %s\n" "----" "----"
+
+    case "$list_type" in
+        colors)
+            for key in "${style_list_color_order[@]}"; do
+                printf "%-18s %s\n" "$key" "${style_list_color_codes[$key]}"
+            done
+            ;;
+        bright-colors)
+            for key in "${style_list_bright_color_order[@]}"; do
+                printf "%-18s %s\n" "$key" "${style_list_bright_color_codes[$key]}"
+            done
+            ;;
+        format)
+            for key in "${style_list_format_order[@]}"; do
+                printf "%-18s %s\n" "$key" "${style_list_format_codes[$key]}"
+            done
+            ;;
+        cursor)
+            for key in "${style_list_cursor_order[@]}"; do
+                printf "%-18s %s\n" "$key" "${style_list_cursor_codes[$key]}"
+            done
+            ;;
+        screen)
+            for key in "${style_list_screen_order[@]}"; do
+                printf "%-18s %s\n" "$key" "${style_list_screen_codes[$key]}"
+            done
+            ;;
+    esac
+}
+
+style_cli_list_parse_args() {
+    local list_type=""
+    local bright=0
+
+    if [[ "$#" -lt 1 ]]; then
+        style_cli_list_usage >&2
+        return 1
+    fi
+
+    case "$1" in
+        -h|--help|help)
+            style_cli_list_usage
+            return 0
+            ;;
+    esac
+
+    list_type="$1"
+    shift
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -b|--bright)
+                bright=1
+                shift
+                ;;
+            -h|--help)
+                style_cli_list_usage
+                return 0
+                ;;
+            --)
+                shift
+                if [[ "$#" -gt 0 ]]; then
+                    print_error "Unexpected argument: $1"
+                    style_cli_list_usage >&2
+                    return 1
+                fi
+                ;;
+            -*)
+                print_error "Unknown option: $1"
+                style_cli_list_usage >&2
+                return 1
+                ;;
+            *)
+                print_error "Unexpected argument: $1"
+                style_cli_list_usage >&2
+                return 1
+                ;;
+        esac
+    done
+
+    if [[ "$bright" -eq 1 && "$list_type" != "colors" ]]; then
+        print_error "--bright can only be used with 'colors'"
+        return 1
+    fi
+
+    case "$list_type" in
+        colors)
+            if [[ "$bright" -eq 1 ]]; then
+                style_cli_list_print_codes "bright-colors"
+            else
+                style_cli_list_print_codes "colors"
+            fi
+            ;;
+        format)
+            style_cli_list_print_codes "format"
+            ;;
+        cursor)
+            style_cli_list_print_codes "cursor"
+            ;;
+        screen)
+            style_cli_list_print_codes "screen"
+            ;;
+        *)
+            print_error "Unknown list type: $list_type"
+            style_cli_list_usage >&2
+            return 1
+            ;;
+    esac
+
+    return "$?"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    style_cli_list_parse_args "$@"
+    exit "$?"
+fi

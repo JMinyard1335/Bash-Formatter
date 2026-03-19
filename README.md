@@ -6,6 +6,7 @@ It provides:
 
 - `style print` for styled log and status output
 - `style menu` for formatted help menu lines
+- `style list` for listing ANSI escape code groups
 
 ## Quick Start
 
@@ -49,6 +50,7 @@ Commands:
 
 - `print`: styled output
 - `menu`: help/menu formatting output
+- `list`: list ANSI escape code groups
 - `help`: usage text
 - `version`: print tool version
 
@@ -104,6 +106,38 @@ style menu --subtitle "Fast shell styling"
 style menu -H "Options"
 style menu --option "-h, --help" --desc "Show help"
 style menu --example "my-tool" --args "style print --success done"
+```
+
+## `style list`
+
+Probably the most use full part of the CLI. Ever forget what a certian ANSI
+escape sequence is? well now just check with the `list` command. This does not have a backing lib and is only a CLI feature. These are all sourced in 
+from the library file anyways.
+
+```bash
+style list <type> [options]
+```
+
+Types:
+
+- `colors`: standard ANSI colors
+- `format`: text format codes
+- `cursor`: cursor control codes
+- `screen`: screen/line clear codes
+
+Options:
+
+- `-b, --bright`: show bright color list (colors only)
+- `-h, --help`: print usage
+
+Examples:
+
+```bash
+style list colors
+style list colors --bright
+style list format
+style list cursor
+style list screen
 ```
 
 ## Demo Script

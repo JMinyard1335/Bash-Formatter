@@ -34,6 +34,7 @@ style_usage() {
         helpmenu_print_header "Commands"
         helpmenu_print_option "print" "Styled output functions"
         helpmenu_print_option "menu" "Help menu formatting functions"
+    helpmenu_print_option "list" "List ANSI escape code groups"
         helpmenu_print_option "help" "Show this message"
         helpmenu_print_option "version" "Print version"
 
@@ -41,6 +42,7 @@ style_usage() {
         helpmenu_print_example "style" "print --error \"something failed\""
         helpmenu_print_example "style" "print --codes \"\\e[1;36m\" --tag \"Info\" --newline \"booting\""
         helpmenu_print_example "style" "menu --title \"My Tool\""
+    helpmenu_print_example "style" "list colors --bright"
         echo ""
 }
 
@@ -57,7 +59,7 @@ style_dispatch() {
             printf '%s\n' '0.1.0'
             return 0
             ;;
-        print|menu)
+        print|menu|list)
             command_bin="${style_libexec_dir}/bashlib_${command}"
             ;;
         *)

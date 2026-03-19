@@ -18,3 +18,9 @@ style_bin="${repo_root}/style"
 "${style_bin}" menu --header "examples"
 "${style_bin}" menu --example "hello" --args "-h '\$USER'"
 
+"${style_bin}" list colors
+"${style_bin}" list colors --bright
+"${style_bin}" list format
+"${style_bin}" list cursor
+"${style_bin}" list screen
+
