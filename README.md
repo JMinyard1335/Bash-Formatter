@@ -38,8 +38,8 @@ chmod +x ./style
 
 This repo keeps install details in a separate file.
 
-- See [INSTALL.md](INSTALL.md) for local, user, and system-wide install options.
-- If you use `bashlib-installer`, follow the dedicated section in [INSTALL.md](INSTALL.md).
+- See [INSTALL.md](docs/INSTALL.md) for local, user, and system-wide install options.
+- If you use `bashlib-installer`, follow the dedicated section in [INSTALL.md](docs/INSTALL.md).
 
 ## Basic Usage
 
@@ -77,7 +77,7 @@ The `style` command is useful for testing and discovery, while sourcing the libr
 
 ## API
 
-For full API documentation see the [API.md](API.md) 
+For full API documentation see the [API.md](docs/API.md) 
 
 ## Contributing
 
