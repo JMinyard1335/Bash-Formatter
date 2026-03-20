@@ -13,6 +13,7 @@ Use it in two ways:
 - [Installation](#installation)
 - [Basic Usage](#basic-usage)
 - [Use As A Library](#use-as-a-library)
+- [API](#API)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -73,6 +74,10 @@ helpmenu_print_title "my-tool"
 ```
 
 The `style` command is useful for testing and discovery, while sourcing the library is the best path for production scripts.
+
+## API
+
+For full API documentation see the [API.md](API.md) 
 
 ## Contributing
 
